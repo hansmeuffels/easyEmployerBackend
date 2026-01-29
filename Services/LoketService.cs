@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using EasyEmployerBackend.Models;
+using Microsoft.Extensions.Options;
 
 namespace EasyEmployerBackend.Services;
 
@@ -13,12 +14,13 @@ public class LoketService : ILoketService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<LoketService> _logger;
-    private const string LoketApiUrl = "https://api.loket-ontw.nl/v2/providers/3b34f479-7b46-4944-b579-acee7257e0cc/employers";
+    private readonly LoketApiSettings _settings;
 
-    public LoketService(HttpClient httpClient, ILogger<LoketService> logger)
+    public LoketService(HttpClient httpClient, ILogger<LoketService> logger, IOptions<LoketApiSettings> settings)
     {
         _httpClient = httpClient;
         _logger = logger;
+        _settings = settings.Value;
     }
 
     public async Task<CreateEmployerResponse> CreateEmployerAsync(string accessToken, string werkgevernaam)
@@ -33,23 +35,28 @@ public class LoketService : ILoketService
             var jsonContent = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+            var employersUrl = $"{_settings.BaseUrl}/providers/{_settings.ProviderId}/employers";
+
+            var request = new HttpRequestMessage(HttpMethod.Post, employersUrl)
+            {
+                Content = content
+            };
+            request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
             _logger.LogInformation("Creating employer with name: {Werkgevernaam}", werkgevernaam);
 
-            var response = await _httpClient.PostAsync(LoketApiUrl, content);
+            var response = await _httpClient.SendAsync(request);
             
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogError("Failed to create employer. Status: {StatusCode}, Error: {Error}", 
                     response.StatusCode, errorContent);
-                throw new HttpRequestException($"Failed to create employer: {response.StatusCode} - {errorContent}");
+                throw new HttpRequestException($"Failed to create employer. Status: {response.StatusCode}");
             }
 
             var responseContent = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation("Employer created successfully. Response: {Response}", responseContent);
+            _logger.LogInformation("Employer created successfully");
 
             var result = JsonSerializer.Deserialize<CreateEmployerResponse>(responseContent, 
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -60,6 +67,11 @@ public class LoketService : ILoketService
             }
 
             return result;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "HTTP error while creating employer");
+            throw;
         }
         catch (Exception ex)
         {

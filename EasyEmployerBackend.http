@@ -1,6 +1,12 @@
 @EasyEmployerBackend_HostAddress = http://localhost:5183
 
-GET {{EasyEmployerBackend_HostAddress}}/weatherforecast/
-Accept: application/json
+### Create Employer
+POST {{EasyEmployerBackend_HostAddress}}/api/employer
+Content-Type: application/json
+
+{
+  "accessToken": "your-access-token-here",
+  "werkgevernaam": "Test Employer BV"
+}
 
 ###

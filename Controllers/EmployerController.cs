@@ -37,7 +37,7 @@ public class EmployerController : ControllerBase
                 return BadRequest(new { error = "Werkgevernaam is required" });
             }
 
-            _logger.LogInformation("Received request to create employer: {Werkgevernaam}", request.Werkgevernaam);
+            _logger.LogInformation("Received request to create employer");
 
             var result = await _loketService.CreateEmployerAsync(request.AccessToken, request.Werkgevernaam);
 
@@ -46,12 +46,12 @@ public class EmployerController : ControllerBase
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "HTTP error while creating employer");
-            return StatusCode(StatusCodes.Status502BadGateway, new { error = "Failed to communicate with Loket API", details = ex.Message });
+            return StatusCode(StatusCodes.Status502BadGateway, new { error = "Failed to communicate with Loket API" });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error while creating employer");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "An unexpected error occurred", details = ex.Message });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "An unexpected error occurred" });
         }
     }
 }

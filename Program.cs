@@ -1,4 +1,5 @@
 using EasyEmployerBackend.Services;
+using EasyEmployerBackend.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,8 +7,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// Register HttpClient for LoketService
-builder.Services.AddHttpClient<ILoketService, LoketService>();
+// Configure Loket API settings
+builder.Services.Configure<LoketApiSettings>(
+    builder.Configuration.GetSection("LoketApi"));
+
+// Register HttpClient for LoketService with timeout
+builder.Services.AddHttpClient<ILoketService, LoketService>()
+    .ConfigureHttpClient(client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(30);
+    });
 
 var app = builder.Build();
 
