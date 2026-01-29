@@ -1,0 +1,10 @@
+{
+  // Cloudflare Workers configuration for easyEmployerBackend
+  // NOTE: This is a C# ASP.NET Core backend - not designed for Cloudflare Workers
+  // This configuration exists to resolve deployment errors, but actual deployment
+  // requires additional tooling or a different hosting platform.
+  
+  "name": "easyemployerbackend",
+  "compatibility_date": "2026-01-29",
+  "main": "src/index.js"
+}
